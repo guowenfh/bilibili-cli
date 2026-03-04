@@ -82,6 +82,24 @@ Credentials are validated on each use. Expired cookies are automatically cleared
 
 Most commands work without login. Subtitles, favorites, feed, and interactions require authentication.
 
+## Use as AI Agent Skill
+
+bilibili-cli ships with a [`SKILL.md`](./SKILL.md) that teaches AI agents how to use it.
+
+To add it to your project:
+
+```bash
+# Clone into your project's skills directory
+mkdir -p .agents/skills
+git clone git@github.com:jackwener/bilibili-cli.git .agents/skills/bilibili-cli
+
+# Or just copy the SKILL.md
+curl -o .agents/skills/bilibili-cli/SKILL.md \
+  https://raw.githubusercontent.com/jackwener/bilibili-cli/main/SKILL.md
+```
+
+Once added, AI agents that support the `.agents/skills/` convention (like Antigravity, Claude Code, etc.) will automatically discover and use bilibili-cli commands.
+
 ---
 
 ## 功能特性
@@ -159,6 +177,24 @@ bilibili-cli 采用三级认证策略：
 凭证在每次使用时自动验证，过期 Cookie 会自动清除。
 
 大部分命令无需登录。字幕、收藏夹、动态和互动操作需要登录。
+
+## 作为 AI Agent Skill 使用
+
+bilibili-cli 自带 [`SKILL.md`](./SKILL.md)，让 AI Agent 能自动学习并使用本工具。
+
+添加到你的项目：
+
+```bash
+# 克隆到项目的 skills 目录
+mkdir -p .agents/skills
+git clone git@github.com:jackwener/bilibili-cli.git .agents/skills/bilibili-cli
+
+# 或者只复制 SKILL.md
+curl -o .agents/skills/bilibili-cli/SKILL.md \
+  https://raw.githubusercontent.com/jackwener/bilibili-cli/main/SKILL.md
+```
+
+添加后，支持 `.agents/skills/` 的 AI Agent（如 Antigravity、Claude Code 等）会自动发现并使用 bilibili-cli 命令。
 
 ## License
 
