@@ -11,11 +11,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Literal
 
+import qrcode
 from bilibili_api.login_v2 import QrCodeLogin, QrCodeLoginEvents
 from bilibili_api.utils.network import Credential
 
@@ -235,6 +237,62 @@ def clear_credential():
         logger.info("Credential removed: %s", CREDENTIAL_FILE)
 
 
+def _render_compact_qr(data: str) -> str:
+    """Render a compact QR code using Unicode half-block characters.
+
+    Uses ▀, ▄, █, and space to encode two vertical modules per character row,
+    reducing the QR code height by half compared to full-block rendering.
+    Each module is 1 character wide (vs 2 in qrcode-terminal), so total area
+    is ~25% of the original.
+    """
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_L)
+    qr.add_data(data)
+    qr.make(fit=True)
+    matrix = qr.get_matrix()
+
+    # Add 1-module quiet zone
+    size = len(matrix)
+    padded = [[False] * (size + 2)]
+    for row in matrix:
+        padded.append([False] + list(row) + [False])
+    padded.append([False] * (size + 2))
+    matrix = padded
+    rows = len(matrix)
+
+    # Check terminal width and warn if too narrow
+    term_cols = shutil.get_terminal_size(fallback=(80, 24)).columns
+    qr_width = len(matrix[0])
+    if qr_width > term_cols:
+        return (
+            f"⚠️  终端宽度 ({term_cols}) 不足以显示二维码 ({qr_width})，"
+            "请放大终端窗口或缩小字体后重试。"
+        )
+
+    lines: list[str] = []
+    # Process two rows at a time using half-block characters
+    # top=black, bottom=black → █ (full block)
+    # top=black, bottom=white → ▀ (upper half)
+    # top=white, bottom=black → ▄ (lower half)
+    # top=white, bottom=white → ' ' (space)
+    for y in range(0, rows, 2):
+        line = ""
+        top_row = matrix[y]
+        bottom_row = matrix[y + 1] if y + 1 < rows else [False] * len(top_row)
+        for x in range(len(top_row)):
+            top = top_row[x]
+            bottom = bottom_row[x]
+            if top and bottom:
+                line += "█"
+            elif top and not bottom:
+                line += "▀"
+            elif not top and bottom:
+                line += "▄"
+            else:
+                line += " "
+        lines.append(line)
+    return "\n".join(lines)
+
+
 async def qr_login() -> Credential:
     """QR code login via terminal.
 
@@ -244,9 +302,12 @@ async def qr_login() -> Credential:
     login = QrCodeLogin()
     await login.generate_qrcode()
 
+    # Extract QR link and render compact version
+    qr_link = login._QrCodeLogin__qr_link  # access private attr for custom rendering
+
     # Display QR code in terminal
     print("\n📱 请使用 Bilibili App 扫描以下二维码登录:\n")
-    print(login.get_qrcode_terminal())
+    print(_render_compact_qr(qr_link))
     print("\n⭐ 扫码后请在手机上确认登录...")
 
     # Poll login state
