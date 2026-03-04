@@ -19,7 +19,11 @@ A CLI for Bilibili — browse videos, users, favorites from the terminal 📺
 ## Installation
 
 ```bash
-pip install bilibili-cli
+# Recommended: pipx (auto-manages virtualenv)
+pipx install bilibili-cli
+
+# Or: uv tool
+uv tool install bilibili-cli
 ```
 
 Or from source:
@@ -117,7 +121,11 @@ Once added, AI agents that support the `.agents/skills/` convention (like Antigr
 ## 安装
 
 ```bash
-pip install bilibili-cli
+# 推荐：pipx（自动管理虚拟环境）
+pipx install bilibili-cli
+
+# 或者：uv tool
+uv tool install bilibili-cli
 ```
 
 或从源码安装：
