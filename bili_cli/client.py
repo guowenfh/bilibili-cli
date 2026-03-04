@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import re
 from typing import Any
 
@@ -476,12 +477,15 @@ async def download_audio(audio_url: str, output_path: str) -> int:
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(audio_url, headers=_DOWNLOAD_HEADERS) as resp:
                     if resp.status == 200:
-                        data = await resp.read()
-                        import os
                         os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+                        total_bytes = 0
                         with open(output_path, "wb") as f:
-                            f.write(data)
-                        return len(data)
+                            async for chunk in resp.content.iter_chunked(256 * 1024):
+                                if not chunk:
+                                    continue
+                                f.write(chunk)
+                                total_bytes += len(chunk)
+                        return total_bytes
                     if attempt < max_retries - 1:
                         logger.warning("Download HTTP %d, retrying...", resp.status)
                         await asyncio.sleep(2)
@@ -497,7 +501,7 @@ async def download_audio(audio_url: str, output_path: str) -> int:
     raise NetworkError("音频下载失败: 重试次数用尽")
 
 
-def split_audio(input_path: str, output_dir: str, segment_seconds: int = 30) -> list[str]:
+def split_audio(input_path: str, output_dir: str, segment_seconds: int = 25) -> list[str]:
     """Split audio into WAV segments using PyAV.
 
     Returns list of segment file paths.
@@ -511,55 +515,65 @@ def split_audio(input_path: str, output_dir: str, segment_seconds: int = 30) -> 
             "或: uv add av"
         ) from None
 
-    import os
+    if segment_seconds <= 0:
+        raise BiliError("segment_seconds 必须大于 0")
+
     os.makedirs(output_dir, exist_ok=True)
-
-    input_container = pyav.open(input_path)
-    input_container.streams.audio[0]  # Verify audio stream exists
-
-    # Decode all frames
-    all_frames = []
-    for frame in input_container.decode(audio=0):
-        all_frames.append(frame)
-    input_container.close()
-
-    if not all_frames:
-        raise BiliError("音频解码失败: 无帧数据")
-
-    sample_rate = all_frames[0].sample_rate
-    samples_per_segment = segment_seconds * sample_rate
 
     def _write_segment(frames: list, seg_idx: int) -> str:
         seg_path = os.path.join(output_dir, f"seg_{seg_idx:03d}.wav")
-        out = pyav.open(seg_path, "w", format="wav")
-        out_stream = out.add_stream("pcm_s16le", rate=16000, layout="mono")
-        resampler = pyav.AudioResampler(format="s16", layout="mono", rate=16000)
-        for fr in frames:
-            fr.pts = None
-            for resampled in resampler.resample(fr):
-                for pkt in out_stream.encode(resampled):
-                    out.mux(pkt)
-        for pkt in out_stream.encode():
-            out.mux(pkt)
-        out.close()
+        out = None
+        try:
+            out = pyav.open(seg_path, "w", format="wav")
+            out_stream = out.add_stream("pcm_s16le", rate=16000, layout="mono")
+            resampler = pyav.AudioResampler(format="s16", layout="mono", rate=16000)
+            for fr in frames:
+                fr.pts = None
+                for resampled in resampler.resample(fr):
+                    for pkt in out_stream.encode(resampled):
+                        out.mux(pkt)
+            for pkt in out_stream.encode():
+                out.mux(pkt)
+        finally:
+            if out is not None:
+                out.close()
         return seg_path
 
-    chunk_paths = []
-    current_samples = 0
-    segment_frames: list = []
-    seg_idx = 0
+    input_container = None
+    try:
+        input_container = pyav.open(input_path)
+        if not input_container.streams.audio:
+            raise BiliError("音频解码失败: 无音频流")
 
-    for frame in all_frames:
-        segment_frames.append(frame)
-        current_samples += frame.samples
-        if current_samples >= samples_per_segment:
+        chunk_paths = []
+        current_samples = 0
+        segment_frames: list = []
+        seg_idx = 0
+        samples_per_segment = None
+        decoded_any = False
+
+        for frame in input_container.decode(audio=0):
+            decoded_any = True
+            if samples_per_segment is None:
+                frame_rate = frame.sample_rate or 16000
+                samples_per_segment = segment_seconds * frame_rate
+
+            segment_frames.append(frame)
+            current_samples += frame.samples or 0
+
+            if samples_per_segment and current_samples >= samples_per_segment:
+                chunk_paths.append(_write_segment(segment_frames, seg_idx))
+                seg_idx += 1
+                current_samples = 0
+                segment_frames = []
+
+        if not decoded_any:
+            raise BiliError("音频解码失败: 无帧数据")
+
+        if segment_frames:
             chunk_paths.append(_write_segment(segment_frames, seg_idx))
-            seg_idx += 1
-            current_samples = 0
-            segment_frames = []
 
-    # Write remaining frames
-    if segment_frames:
-        chunk_paths.append(_write_segment(segment_frames, seg_idx))
-
-    return chunk_paths
+        return chunk_paths
+    finally:
+        if input_container is not None:
+            input_container.close()

@@ -104,7 +104,7 @@ bilibili-cli uses a 3-tier authentication strategy:
 Credentials are validated on use for authenticated commands. Expired cookies are automatically cleared, while transient network validation failures keep local credentials for best-effort fallback.
 `bili status` exits with code `0` only when authenticated; otherwise it exits with `1`.
 
-Most commands work without login. Subtitles, favorites, feed, and interactions require authentication.
+Most commands work without login. Subtitles, favorites/following/watch-later/history, feed, and interactions require authentication.
 
 ## Use as AI Agent Skill
 

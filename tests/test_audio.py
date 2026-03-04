@@ -1,5 +1,6 @@
 """Tests for audio extraction command and client functions."""
 
+import os
 import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -64,11 +65,65 @@ async def test_get_audio_url_no_stream_raises():
 
 def test_split_audio_import_error():
     """split_audio should raise BiliError when PyAV is not installed."""
-    with patch.dict("sys.modules", {"av": None}):
-        # Force reimport to trigger ImportError
-        # We test the error message directly
-        with pytest.raises((BiliError, ImportError)):
+    import builtins
+
+    original_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "av":
+            raise ImportError("no av")
+        return original_import(name, *args, **kwargs)
+
+    with patch("builtins.__import__", side_effect=fake_import):
+        with pytest.raises(BiliError, match="PyAV"):
             client.split_audio("/nonexistent", "/tmp/test_out", segment_seconds=25)
+
+
+def test_split_audio_invalid_segment_seconds():
+    with patch.dict("sys.modules", {"av": MagicMock()}):
+        with pytest.raises(BiliError, match="segment_seconds 必须大于 0"):
+            client.split_audio("/nonexistent", "/tmp/test_out", segment_seconds=0)
+
+
+@pytest.mark.asyncio
+async def test_download_audio_streams_chunks_to_file():
+    content = [b"abc", b"defgh", b""]
+
+    class FakeContent:
+        async def iter_chunked(self, _size):
+            for c in content:
+                yield c
+
+    class FakeResponse:
+        status = 200
+        content = FakeContent()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    class FakeSession:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        def get(self, _url, headers=None):
+            return FakeResponse()
+
+    with patch("bili_cli.client.aiohttp.ClientSession", FakeSession):
+        with tempfile.TemporaryDirectory() as td:
+            path = os.path.join(td, "a.m4a")
+            n = await client.download_audio("https://example.com/audio.m4s", path)
+            assert n == 8
+            with open(path, "rb") as f:
+                assert f.read() == b"abcdefgh"
 
 
 # ===== CLI command tests =====

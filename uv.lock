@@ -282,6 +282,7 @@ version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
+    { name = "av" },
     { name = "bilibili-api-python" },
     { name = "browser-cookie3" },
     { name = "click" },
@@ -289,9 +290,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-audio = [
-    { name = "av" },
-]
 dev = [
     { name = "av" },
     { name = "mypy" },
@@ -304,7 +302,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.0" },
-    { name = "av", marker = "extra == 'audio'", specifier = ">=14.0" },
+    { name = "av", specifier = ">=14.0" },
     { name = "av", marker = "extra == 'dev'", specifier = ">=14.0" },
     { name = "bilibili-api-python", specifier = ">=16.0" },
     { name = "browser-cookie3", specifier = ">=0.19" },
@@ -316,7 +314,7 @@ requires-dist = [
     { name = "rich", specifier = ">=13.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.0" },
 ]
-provides-extras = ["audio", "dev"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "brotli"

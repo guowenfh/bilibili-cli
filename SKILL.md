@@ -17,7 +17,7 @@ pipx install bilibili-cli
 
 ## Authentication
 
-Most read commands work without login. Subtitles, favorites, feed, and interactions require login.
+Most read commands work without login. Subtitles, favorites/following/watch-later/history, feed, and interactions require login.
 
 ```bash
 bili status                    # Check if logged in
@@ -80,7 +80,8 @@ bili feed                      # Dynamic timeline (requires login)
 bili favorites                 # List favorite folders
 bili favorites <ID> --page 2   # Videos in a folder
 bili following                 # Following list
-bili history                   # Watch later list
+bili watch-later               # Watch later list
+bili history                   # Watch history
 ```
 
 ### Audio Extraction
@@ -92,8 +93,6 @@ bili audio BV1ABcsztEcY --segment 60    # 60s per segment
 bili audio BV1ABcsztEcY --no-split      # Full m4a file, no splitting
 bili audio BV1ABcsztEcY -o ~/data/      # Custom output directory
 ```
-
-Requires `av` (PyAV): `pipx inject bilibili-cli av` or `pip install av`
 
 ### Interactions (require login)
 
@@ -117,7 +116,7 @@ bili logout                    # Clear credentials
 
 ## JSON Output
 
-All read commands support `--json` for machine-readable output:
+Major query commands support `--json` for machine-readable output:
 
 ```bash
 bili video BV1ABcsztEcY --json | jq '.stat.view'    # Get view count

@@ -23,7 +23,7 @@ def _sanitize_filename(title: str) -> str:
 @click.command()
 @click.argument("bv_or_url")
 @click.option("--segment", "-s", default=25, type=click.IntRange(5, 300),
-              help="每段时长（秒），默认 25。设为 0 则不切分。")
+              help="每段时长（秒），默认 25。")
 @click.option("--no-split", is_flag=True, help="不切分，直接保存完整音频文件。")
 @click.option("--output", "-o", default=None, type=click.Path(),
               help=f"输出目录（默认 {DEFAULT_TMP_DIR}/{{title}}/）。")
@@ -31,7 +31,7 @@ def audio(bv_or_url: str, segment: int, no_split: bool, output: str | None):
     """下载视频音频并切分为 ASR-ready WAV 片段。
 
     默认输出到 /tmp/bilibili-cli/{title}/ 目录，
-    每段 30 秒，16kHz mono PCM WAV 格式，可直接用于语音转文字 API。
+    每段 25 秒，16kHz mono PCM WAV 格式，可直接用于语音转文字 API。
 
     \b
     示例:
