@@ -4,6 +4,11 @@ A CLI for Bilibili — browse videos, users, favorites from the terminal 📺
 
 [English](#features) | [中文](#功能特性)
 
+## More Projects
+
+- [xhs-cli](https://github.com/jackwener/xhs-cli) — Xiaohongshu CLI tooling
+- [twitter-cli](https://github.com/jackwener/twitter-cli) — Twitter/X CLI tooling
+
 ## Features
 
 - 🎬 **Video** — details, subtitles, AI summary, comments, related videos
@@ -147,6 +152,11 @@ clawhub install bilibili-cli
 All bilibili-cli commands are available in OpenClaw after installation.
 
 ---
+
+## 推荐项目
+
+- [xhs-cli](https://github.com/jackwener/xhs-cli) — 小红书 CLI 工具
+- [twitter-cli](https://github.com/jackwener/twitter-cli) — Twitter/X CLI 工具
 
 ## 功能特性
 
