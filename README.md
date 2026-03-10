@@ -11,7 +11,7 @@ A CLI for Bilibili — browse videos, users, favorites from the terminal 📺
 
 ## More Projects
 
-- [xhs-cli](https://github.com/jackwener/xhs-cli) — Xiaohongshu CLI tooling
+- [xiaohongshu-cli](https://github.com/jackwener/xiaohongshu-cli) — Xiaohongshu (小红书) CLI for notes and account workflows
 - [twitter-cli](https://github.com/jackwener/twitter-cli) — Twitter/X CLI tooling
 - [discord-cli](https://github.com/jackwener/discord-cli) — Discord CLI for local-first chat sync and search
 - [tg-cli](https://github.com/jackwener/tg-cli) — Telegram CLI for local-first sync, search, and export
@@ -225,7 +225,7 @@ Structured error codes: `not_authenticated`, `permission_denied`, `invalid_input
 
 ## 推荐项目
 
-- [xhs-cli](https://github.com/jackwener/xhs-cli) — 小红书 CLI 工具
+- [xiaohongshu-cli](https://github.com/jackwener/xiaohongshu-cli) — 小红书笔记与账号工作流 CLI
 - [twitter-cli](https://github.com/jackwener/twitter-cli) — Twitter/X CLI 工具
 - [discord-cli](https://github.com/jackwener/discord-cli) — Discord 本地优先同步、检索与导出 CLI
 - [tg-cli](https://github.com/jackwener/tg-cli) — Telegram 本地优先同步、检索与导出 CLI
