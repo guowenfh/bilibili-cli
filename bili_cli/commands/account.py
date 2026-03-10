@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import click
 from rich.panel import Panel
 
@@ -42,10 +40,13 @@ def status():
 
 
 @click.command()
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def whoami(as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def whoami(as_json: bool, as_yaml: bool):
     """查看当前登录用户的详细信息。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login(message="未登录。使用 [bold]bili login[/bold] 登录。")
 
@@ -56,8 +57,7 @@ def whoami(as_json: bool):
         "获取用户信息失败",
     )
 
-    if as_json:
-        click.echo(json.dumps({"info": info, "relation": relation}, ensure_ascii=False, indent=2))
+    if common.emit_structured({"info": info, "relation": relation}, output_format):
         return
 
     name = info.get("name", "unknown")

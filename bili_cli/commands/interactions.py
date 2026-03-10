@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import click
 
 from . import common
@@ -65,10 +63,13 @@ def triple(bv_or_url: str):
 @click.command()
 @click.argument("uid", type=int)
 @click.option("--yes", is_flag=True, help="跳过确认，直接取消关注。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def unfollow(uid: int, yes: bool, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def unfollow(uid: int, yes: bool, as_json: bool, as_yaml: bool):
     """取消关注某个 UP（按 UID）。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login(require_write=True)
 
@@ -83,8 +84,7 @@ def unfollow(uid: int, yes: bool, as_json: bool):
         "取消关注失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     common.console.print(f"[green]✅ 已取消关注 UID={uid}[/green]")

@@ -1,6 +1,6 @@
 ---
 name: bilibili-cli
-description: CLI skill for Bilibili (哔哩哔哩, B站) to browse videos, users, search, trending, dynamics, favorites, and interactions from the terminal
+description: CLI skill for Bilibili (哔哩哔哩, B站) with token-efficient YAML output for AI agents to browse videos, users, search, trending, dynamics, favorites, and interactions from the terminal
 author: jackwener
 version: "1.0.0"
 tags:
@@ -15,6 +15,15 @@ tags:
 # bilibili-cli Skill
 
 A CLI tool for interacting with Bilibili (哔哩哔哩). Use it to fetch video info, search content, browse user profiles, and perform interactions like liking or triple-clicking.
+
+## Agent Defaults
+
+When you need machine-readable output:
+
+1. Prefer `--yaml` first because it is usually more token-efficient than pretty JSON.
+2. Use `--json` only when downstream tooling strictly requires JSON.
+3. Keep result sets small with `--max`, `--page`, or `--offset`.
+4. Prefer specific commands over broad ones. Example: use `bili user-videos 946974 --max 3 --yaml` instead of fetching large timelines.
 
 ## Prerequisites
 
@@ -53,6 +62,7 @@ bili video BV1ABcsztEcY --subtitle      # Show subtitles (AI or uploaded)
 bili video BV1ABcsztEcY --ai            # Show B站 AI summary
 bili video BV1ABcsztEcY --comments      # Show top comments
 bili video BV1ABcsztEcY --related       # Show related videos
+bili video BV1ABcsztEcY --yaml          # Token-efficient YAML output
 bili video BV1ABcsztEcY --json          # Raw JSON output
 ```
 
@@ -65,7 +75,7 @@ bili user "影视飓风"
 
 # List user's videos
 bili user-videos 946974 --max 20
-bili user-videos "影视飓风" --json
+bili user-videos "影视飓风" --yaml
 ```
 
 ### Search
@@ -134,19 +144,20 @@ bili unfollow 946974           # Unfollow by UID
 ```bash
 bili status                    # Quick login check
 bili whoami                    # Detailed profile info
+bili whoami --yaml              # Profile as YAML
 bili whoami --json              # Profile as JSON
 bili login                     # QR code login
 bili logout                    # Clear credentials
 ```
 
-## JSON Output
+## Structured Output
 
-Major query commands support `--json` for machine-readable output:
+Major query commands support both `--yaml` and `--json` for machine-readable output. Prefer YAML for agent use:
 
 ```bash
-bili video BV1ABcsztEcY --json | jq '.stat.view'    # Get view count
-bili hot --json | jq '.list[0].title'                # First trending title
-bili user 946974 --json | jq '.user_info.name'       # Username
+bili video BV1ABcsztEcY --yaml                       # Preferred for AI agents
+bili hot --max 5 --yaml                             # Smaller, token-efficient payload
+bili user 946974 --json | jq '.user_info.name'      # JSON when jq is needed
 ```
 
 ## Debugging
@@ -171,14 +182,14 @@ bili video BV1ABcsztEcY --comments
 # Segments are saved to /tmp/bilibili-cli/{title}/seg_000.wav, seg_001.wav, ...
 bili audio BV1ABcsztEcY --segment 25
 
-# Find a user's latest video BV ID
-bili user-videos 946974 --max 1 --json | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['bvid'])"
+# Find a user's latest video BV ID with minimal payload
+bili user-videos 946974 --max 1 --yaml
 
 # Check if logged in before performing actions
 bili status && bili like BV1ABcsztEcY
 
-# Search and get first result
-bili search "topic" --type video --json | python3 -c "import sys,json; r=json.load(sys.stdin); print(r[0]['bvid'] if r else 'not found')"
+# Search and inspect the first few results
+bili search "topic" --type video --max 3 --yaml
 ```
 
 ### Workflow: Video Content Analysis

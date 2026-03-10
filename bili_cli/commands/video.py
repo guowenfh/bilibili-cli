@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import click
 from rich.table import Table
 
@@ -16,13 +14,16 @@ from . import common
 @click.option("--comments", "-c", is_flag=True, help="显示评论。")
 @click.option("--ai", is_flag=True, help="显示 AI 总结。")
 @click.option("--related", "-r", is_flag=True, help="显示相关推荐视频。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def video(bv_or_url: str, subtitle: bool, comments: bool, ai: bool, related: bool, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def video(bv_or_url: str, subtitle: bool, comments: bool, ai: bool, related: bool, as_json: bool, as_yaml: bool):
     """查看视频详情。
 
     BV_OR_URL 可以是 BV 号（如 BV1xxx）或完整 URL。
     """
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     bvid = common.extract_bvid_or_exit(bv_or_url)
     needs_optional_cred = subtitle or comments or ai or related
@@ -33,8 +34,7 @@ def video(bv_or_url: str, subtitle: bool, comments: bool, ai: bool, related: boo
         "获取视频信息失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(info, ensure_ascii=False, indent=2))
+    if common.emit_structured(info, output_format):
         return
 
     stat = info.get("stat", {})

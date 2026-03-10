@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import sys
 from typing import NoReturn
 
+import click
+import yaml
 from rich.console import Console
 
 from .. import auth
 from ..exceptions import BiliError, InvalidBvidError
 
 console = Console(stderr=True)
+OutputFormat = str | None
 
 
 def setup_logging(verbose: bool):
@@ -24,6 +28,28 @@ def setup_logging(verbose: bool):
 def run(coro):
     """Bridge async coroutine into synchronous click command."""
     return asyncio.run(coro)
+
+
+def resolve_output_format(*, as_json: bool = False, as_yaml: bool = False) -> OutputFormat:
+    """Resolve mutually exclusive machine-readable output flags."""
+    if as_json and as_yaml:
+        exit_error("不能同时使用 --json 和 --yaml。")
+    if as_yaml:
+        return "yaml"
+    if as_json:
+        return "json"
+    return None
+
+
+def emit_structured(data: object, output_format: OutputFormat) -> bool:
+    """Serialize data for machine-readable output and report whether emission happened."""
+    if output_format == "json":
+        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+        return True
+    if output_format == "yaml":
+        click.echo(yaml.safe_dump(data, allow_unicode=True, sort_keys=False))
+        return True
+    return False
 
 
 def exit_error(message: str) -> NoReturn:

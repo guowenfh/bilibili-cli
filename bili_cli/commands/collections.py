@@ -94,21 +94,23 @@ def _extract_dynamic_text(item: dict[str, Any]) -> str:
 @click.command()
 @click.argument("fav_id", required=False, type=int)
 @click.option("--page", "-p", default=1, type=click.IntRange(1), help="页码 (默认 1，最小 1)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def favorites(fav_id: int | None, page: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def favorites(fav_id: int | None, page: int, as_json: bool, as_yaml: bool):
     """浏览收藏夹。
 
     不带参数列出所有收藏夹，带 FAV_ID 查看收藏夹内的视频。
     """
     from .. import client
 
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
+
     cred = common.require_login(message="需要登录才能查看收藏夹。使用 [bold]bili login[/bold] 登录。")
 
     if fav_id is None:
         fav_list = common.run_or_exit(client.get_favorite_list(cred), "获取收藏夹列表失败")
 
-        if as_json:
-            click.echo(json.dumps(fav_list, ensure_ascii=False, indent=2))
+        if common.emit_structured(fav_list, output_format):
             return
 
         if not fav_list:
@@ -136,8 +138,7 @@ def favorites(fav_id: int | None, page: int, as_json: bool):
             "获取收藏夹内容失败",
         )
 
-        if as_json:
-            click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+        if common.emit_structured(data, output_format):
             return
 
         medias = data.get("medias") or []
@@ -171,10 +172,13 @@ def favorites(fav_id: int | None, page: int, as_json: bool):
 
 @click.command()
 @click.option("--page", "-p", default=1, type=click.IntRange(1), help="页码 (默认 1，最小 1)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def following(page: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def following(page: int, as_json: bool, as_yaml: bool):
     """查看关注列表。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login()
 
@@ -185,8 +189,7 @@ def following(page: int, as_json: bool):
         "获取关注列表失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     flist = data.get("list") or []
@@ -216,10 +219,13 @@ def following(page: int, as_json: bool):
 @click.command()
 @click.option("--page", "-p", default=1, type=click.IntRange(1), help="页码 (默认 1，最小 1)。")
 @click.option("--max", "-n", "count", default=30, type=click.IntRange(1, 100), help="显示数量 (默认 30，1-100)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def history(page: int, count: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def history(page: int, count: int, as_json: bool, as_yaml: bool):
     """查看观看历史。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login()
     data = common.run_or_exit(
@@ -227,8 +233,7 @@ def history(page: int, count: int, as_json: bool):
         "获取观看历史失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     if isinstance(data, list):
@@ -267,17 +272,19 @@ def history(page: int, count: int, as_json: bool):
 
 
 @click.command(name="watch-later")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def watch_later(as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def watch_later(as_json: bool, as_yaml: bool):
     """查看稍后再看列表。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login()
 
     data = common.run_or_exit(client.get_toview(cred), "获取稍后再看失败")
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     vlist = data.get("list") or []
@@ -308,10 +315,13 @@ def watch_later(as_json: bool):
 
 @click.command()
 @click.option("--offset", default="", help="分页游标；留空为最新。可使用上一页返回的 next_offset/offset。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def feed(offset: str, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def feed(offset: str, as_json: bool, as_yaml: bool):
     """查看动态时间线。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login()
 
@@ -320,8 +330,7 @@ def feed(offset: str, as_json: bool):
         "获取动态失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     items = data.get("items") or []
@@ -376,10 +385,13 @@ def feed(offset: str, as_json: bool):
 @click.option("--offset", default=0, type=click.IntRange(0), help="分页偏移量；默认 0。")
 @click.option("--top/--no-top", "need_top", default=False, help="是否包含置顶动态。")
 @click.option("--max", "-n", "count", default=20, type=click.IntRange(1, 50), help="显示条数 (1-50)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def my_dynamics(offset: int, need_top: bool, count: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def my_dynamics(offset: int, need_top: bool, count: int, as_json: bool, as_yaml: bool):
     """查看我发布的动态。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login()
 
@@ -393,8 +405,7 @@ def my_dynamics(offset: int, need_top: bool, count: int, as_json: bool):
         "获取我的动态失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     cards = data.get("cards") or []
@@ -433,10 +444,13 @@ def my_dynamics(offset: int, need_top: bool, count: int, as_json: bool):
     default=None,
     help="从文件读取动态文本。",
 )
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def dynamic_post(text: str | None, from_file: Path | None, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def dynamic_post(text: str | None, from_file: Path | None, as_json: bool, as_yaml: bool):
     """发布一条纯文本动态。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login(require_write=True)
     raw_text = text or ""
@@ -452,8 +466,7 @@ def dynamic_post(text: str | None, from_file: Path | None, as_json: bool):
         "发布动态失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     dynamic_id = data.get("dynamic_id") or data.get("dynamic_id_str") or data.get("dyn_id")
@@ -466,10 +479,13 @@ def dynamic_post(text: str | None, from_file: Path | None, as_json: bool):
 @click.command(name="dynamic-delete")
 @click.argument("dynamic_id", type=int)
 @click.option("--yes", is_flag=True, help="跳过确认，直接删除。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def dynamic_delete(dynamic_id: int, yes: bool, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def dynamic_delete(dynamic_id: int, yes: bool, as_json: bool, as_yaml: bool):
     """删除一条动态。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     cred = common.require_login(require_write=True)
 
@@ -484,8 +500,7 @@ def dynamic_delete(dynamic_id: int, yes: bool, as_json: bool):
         "删除动态失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     common.console.print(f"[green]🗑️ 已删除动态: {dynamic_id}[/green]")

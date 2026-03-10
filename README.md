@@ -20,7 +20,7 @@ A CLI for Bilibili — browse videos, users, favorites from the terminal 📺
 - 📂 **Favorites** — browse favorite folders, watch-later, and watch history
 - 👍 **Interactions** — like, coin, triple (一键三连)
 - 🔐 **Smart auth** — auto-extracts cookies from Chrome/Firefox, or QR code login
-- 📊 **JSON output** — major query commands support `--json` for scripting
+- 📊 **Structured output** — major query commands support `--yaml` and `--json`
 
 ## Installation
 
@@ -67,6 +67,7 @@ bili video BV1ABcsztEcY --subtitle      # With subtitles
 bili video BV1ABcsztEcY --ai            # AI summary
 bili video BV1ABcsztEcY --comments      # Top comments
 bili video BV1ABcsztEcY --related       # Related videos
+bili video BV1ABcsztEcY --yaml          # Agent-friendly YAML
 bili video BV1ABcsztEcY --json          # Raw JSON
 
 # Users
@@ -127,6 +128,24 @@ Audio extraction requires the optional `audio` dependency group (`av`).
 
 bilibili-cli ships with a [`SKILL.md`](./SKILL.md) that teaches AI agents how to use it.
 
+### Agent Output Recommendation
+
+If an AI agent needs machine-readable output, prefer `--yaml` first:
+
+- `--yaml` is usually more token-efficient than pretty-printed JSON
+- It is still easy to parse for agents and scripts
+- Keep `--json` for `jq`, strict JSON-only tooling, or exact downstream schemas
+
+Examples:
+
+```bash
+bili video BV1ABcsztEcY --yaml
+bili hot --max 5 --yaml
+bili user-videos 946974 --max 3 --yaml
+```
+
+For agent usage, also prefer narrower queries (`--max`, `--page`, `--offset`) to avoid wasting context on oversized payloads.
+
 ### Claude Code / Antigravity
 
 ```bash
@@ -169,7 +188,7 @@ All bilibili-cli commands are available in OpenClaw after installation.
 - 📂 **收藏** — 收藏夹浏览、稍后再看、观看历史
 - 👍 **互动** — 点赞、投币、一键三连
 - 🔐 **智能认证** — 自动提取浏览器 Cookie，或扫码登录
-- 📊 **JSON 输出** — 主要查询命令支持 `--json`，方便脚本调用
+- 📊 **结构化输出** — 主要查询命令支持 `--yaml` 和 `--json`
 
 ## 安装
 
@@ -208,6 +227,8 @@ bili video BV1ABcsztEcY --subtitle      # 显示字幕
 bili video BV1ABcsztEcY --ai            # AI 总结
 bili video BV1ABcsztEcY --comments      # 热门评论
 bili video BV1ABcsztEcY --related       # 相关推荐
+bili video BV1ABcsztEcY --yaml          # 适合 AI Agent 的 YAML
+bili video BV1ABcsztEcY --json          # 原始 JSON
 
 # 用户
 bili user 946974                        # UP 主资料
@@ -258,6 +279,24 @@ bilibili-cli 采用三级认证策略：
 需要认证的命令会自动校验凭证。过期 Cookie 会自动清除；如果只是临时网络异常，不会误清本地凭证（会以 best-effort 继续尝试）。
 
 大部分命令无需登录。字幕、收藏夹、动态和互动操作需要登录。写操作（like/coin/triple/unfollow/dynamic-post/dynamic-delete）需要可写凭证（包含 `bili_jct`）。
+
+## AI Agent 使用建议
+
+如果 AI Agent 需要机器可读输出，默认优先 `--yaml`：
+
+- `--yaml` 通常比格式化 JSON 更省 token
+- 对 agent 来说仍然容易解析
+- 只有在要配合 `jq` 或下游必须是 JSON 时，再使用 `--json`
+
+示例：
+
+```bash
+bili video BV1ABcsztEcY --yaml
+bili hot --max 5 --yaml
+bili user-videos 946974 --max 3 --yaml
+```
+
+另外，agent 应尽量配合 `--max`、`--page`、`--offset` 缩小结果集，避免把不必要的数据带进上下文。
 
 音频提取功能需要安装可选依赖组 `audio`（即 `av`）。
 

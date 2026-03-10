@@ -4,6 +4,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import yaml
 from click.testing import CliRunner
 
 from bili_cli.cli import cli
@@ -12,6 +13,10 @@ from bili_cli.cli import cli
 @pytest.fixture
 def runner():
     return CliRunner()
+
+
+def _load_yaml(text: str):
+    return yaml.safe_load(text)
 
 
 # ===== Login/Status =====
@@ -73,6 +78,18 @@ def test_whoami_json(runner, mock_user_info, mock_relation_info):
         assert data["relation"]["follower"] == 50000
 
 
+def test_whoami_yaml(runner, mock_user_info, mock_relation_info):
+    mock_cred = MagicMock()
+    with patch("bili_cli.commands.common.get_credential", return_value=mock_cred), \
+         patch("bili_cli.client.get_self_info", new_callable=AsyncMock, return_value=mock_user_info), \
+         patch("bili_cli.client.get_user_relation_info", new_callable=AsyncMock, return_value=mock_relation_info):
+        result = runner.invoke(cli, ["whoami", "--yaml"])
+        assert result.exit_code == 0
+        data = _load_yaml(result.output)
+        assert data["info"]["name"] == "TestUP"
+        assert data["relation"]["follower"] == 50000
+
+
 # ===== Video =====
 
 
@@ -83,6 +100,16 @@ def test_video_json(runner, mock_video_info):
         result = runner.invoke(cli, ["video", "BV1test123", "--json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
+        assert data["title"] == "测试视频标题"
+
+
+def test_video_yaml(runner, mock_video_info):
+    with patch("bili_cli.commands.common.get_credential", return_value=None), \
+         patch("bili_cli.client.extract_bvid", return_value="BV1test123"), \
+         patch("bili_cli.client.get_video_info", new_callable=AsyncMock, return_value=mock_video_info):
+        result = runner.invoke(cli, ["video", "BV1test123", "--yaml"])
+        assert result.exit_code == 0
+        data = _load_yaml(result.output)
         assert data["title"] == "测试视频标题"
 
 
@@ -181,6 +208,16 @@ def test_hot_json(runner):
         assert data["list"][0]["bvid"] == "BV1hot"
 
 
+def test_hot_yaml(runner):
+    mock_data = {"list": [{"bvid": "BV1hot", "title": "Hot"}]}
+    with patch("bili_cli.commands.common.get_credential", return_value=None), \
+         patch("bili_cli.client.get_hot_videos", new_callable=AsyncMock, return_value=mock_data):
+        result = runner.invoke(cli, ["hot", "--yaml"])
+        assert result.exit_code == 0
+        data = _load_yaml(result.output)
+        assert data["list"][0]["bvid"] == "BV1hot"
+
+
 def test_hot_invalid_max(runner):
     result = runner.invoke(cli, ["hot", "--max", "0"])
     assert result.exit_code != 0
@@ -205,6 +242,15 @@ def test_rank_json(runner):
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data["list"][0]["bvid"] == "BV1rank"
+
+
+def test_structured_output_flags_are_mutually_exclusive(runner, mock_video_info):
+    with patch("bili_cli.commands.common.get_credential", return_value=None), \
+         patch("bili_cli.client.extract_bvid", return_value="BV1test123"), \
+         patch("bili_cli.client.get_video_info", new_callable=AsyncMock, return_value=mock_video_info):
+        result = runner.invoke(cli, ["video", "BV1test123", "--json", "--yaml"])
+        assert result.exit_code != 0
+        assert "不能同时使用 --json 和 --yaml" in result.output
 
 
 def test_rank_api_error_returns_nonzero(runner):

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import click
 from rich.table import Table
 
@@ -13,15 +11,17 @@ from . import common
 @click.command(name="hot")
 @click.option("--page", "-p", default=1, type=click.IntRange(1), help="页码 (默认 1，最小 1)。")
 @click.option("--max", "-n", "count", default=20, type=click.IntRange(1), help="显示数量 (默认 20，最小 1)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def hot_cmd(page: int, count: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def hot_cmd(page: int, count: int, as_json: bool, as_yaml: bool):
     """查看热门视频。"""
     from .. import client
 
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
+
     data = common.run_or_exit(client.get_hot_videos(pn=page, ps=count), "获取热门视频失败")
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     vlist = data.get("list") or []
@@ -55,15 +55,17 @@ def hot_cmd(page: int, count: int, as_json: bool):
 @click.command(name="rank")
 @click.option("--day", default="3", type=click.Choice(["3", "7"]), help="排行周期：3 或 7 天（默认 3）。")
 @click.option("--max", "-n", "count", default=20, type=click.IntRange(1), help="显示数量 (默认 20，最小 1)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def rank_cmd(day: str, count: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def rank_cmd(day: str, count: int, as_json: bool, as_yaml: bool):
     """查看全站排行榜。"""
     from .. import client
 
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
+
     data = common.run_or_exit(client.get_rank_videos(day=int(day)), "获取排行榜失败")
 
-    if as_json:
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+    if common.emit_structured(data, output_format):
         return
 
     vlist = data.get("list") or []

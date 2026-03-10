@@ -2,9 +2,9 @@
 
 Usage:
     bili login / logout / status / whoami
-    bili video <BV号或URL> [--subtitle] [--ai] [--comments] [--related] [--json]
+    bili video <BV号或URL> [--subtitle] [--ai] [--comments] [--related] [--yaml|--json]
     bili user <UID或用户名>          bili user-videos <UID> [--max N]
-    bili search <关键词> [--type user|video] [--json]
+    bili search <关键词> [--type user|video] [--yaml|--json]
     bili hot / rank / feed / my-dynamics / following / history / watch-later / favorites
     bili dynamic-post <TEXT> / dynamic-delete <动态ID>
     bili like / coin / triple <BV号> / unfollow <UID>

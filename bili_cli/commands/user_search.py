@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 
 import click
@@ -56,13 +55,16 @@ def _format_video_length(length_raw: object) -> str:
 
 @click.command()
 @click.argument("uid_or_name")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def user(uid_or_name: str, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def user(uid_or_name: str, as_json: bool, as_yaml: bool):
     """查看 UP 主资料。
 
     UID_OR_NAME 可以是 UID（纯数字）或用户名（搜索第一个匹配）。
     """
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     uid = _resolve_uid(uid_or_name)
 
@@ -72,8 +74,7 @@ def user(uid_or_name: str, as_json: bool):
         "获取用户信息失败",
     )
 
-    if as_json:
-        click.echo(json.dumps({"user_info": info, "relation": relation}, ensure_ascii=False, indent=2))
+    if common.emit_structured({"user_info": info, "relation": relation}, output_format):
         return
 
     follower = relation.get("follower", 0)
@@ -96,13 +97,16 @@ def user(uid_or_name: str, as_json: bool):
 @click.command(name="user-videos")
 @click.argument("uid_or_name")
 @click.option("--max", "-n", "count", default=10, type=click.IntRange(1), help="显示的视频数量 (默认 10，最小 1)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def user_videos(uid_or_name: str, count: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def user_videos(uid_or_name: str, count: int, as_json: bool, as_yaml: bool):
     """查看 UP 主的视频列表。
 
     UID_OR_NAME 可以是 UID（纯数字）或用户名（搜索第一个匹配）。
     """
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     uid = _resolve_uid(uid_or_name)
 
@@ -111,8 +115,7 @@ def user_videos(uid_or_name: str, count: int, as_json: bool):
         "获取视频列表失败",
     )
 
-    if as_json:
-        click.echo(json.dumps(videos, ensure_ascii=False, indent=2))
+    if common.emit_structured(videos, output_format):
         return
 
     if not videos:
@@ -144,16 +147,18 @@ def user_videos(uid_or_name: str, count: int, as_json: bool):
 @click.option("--type", "search_type", default="user", type=click.Choice(["user", "video"]), help="搜索类型 (默认 user)。")
 @click.option("--page", default=1, type=click.IntRange(1), help="页码 (默认 1，最小 1)。")
 @click.option("--max", "-n", "count", default=20, type=click.IntRange(1), help="显示数量 (默认 20，最小 1)。")
-@click.option("--json", "as_json", is_flag=True, help="输出原始 JSON。")
-def search(keyword: str, search_type: str, page: int, count: int, as_json: bool):
+@click.option("--json", "as_json", is_flag=True, help="输出 JSON。")
+@click.option("--yaml", "as_yaml", is_flag=True, help="输出 YAML，推荐给 AI Agent。")
+def search(keyword: str, search_type: str, page: int, count: int, as_json: bool, as_yaml: bool):
     """搜索用户或视频。"""
     from .. import client
+
+    output_format = common.resolve_output_format(as_json=as_json, as_yaml=as_yaml)
 
     if search_type == "video":
         results = common.run_or_exit(client.search_video(keyword, page=page), "搜索视频失败")
 
-        if as_json:
-            click.echo(json.dumps(results, ensure_ascii=False, indent=2))
+        if common.emit_structured(results, output_format):
             return
 
         display_results = [v for v in results if v.get("bvid")]
@@ -184,8 +189,7 @@ def search(keyword: str, search_type: str, page: int, count: int, as_json: bool)
     else:
         results = common.run_or_exit(client.search_user(keyword, page=page), "搜索用户失败")
 
-        if as_json:
-            click.echo(json.dumps(results, ensure_ascii=False, indent=2))
+        if common.emit_structured(results, output_format):
             return
 
         if not results:
