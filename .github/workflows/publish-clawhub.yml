@@ -107,7 +107,7 @@ jobs:
           } catch {}
           if (!token) { console.error("No token found"); process.exit(1); }
 
-          const registry = "https://api.clawhub.io";
+          const registry = "https://clawhub.ai";
           fetch(registry + "/api/v1/skills", {
             method: "POST",
             headers: { Authorization: "Bearer " + token },
