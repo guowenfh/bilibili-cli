@@ -8,6 +8,8 @@ A CLI for Bilibili — browse videos, users, favorites from the terminal 📺
 
 - [xhs-cli](https://github.com/jackwener/xhs-cli) — Xiaohongshu CLI tooling
 - [twitter-cli](https://github.com/jackwener/twitter-cli) — Twitter/X CLI tooling
+- [discord-cli](https://github.com/jackwener/discord-cli) — Discord CLI for local-first chat sync and search
+- [tg-cli](https://github.com/jackwener/tg-cli) — Telegram CLI for local-first sync, search, and export
 
 ## Features
 
@@ -178,6 +180,8 @@ All bilibili-cli commands are available in OpenClaw after installation.
 
 - [xhs-cli](https://github.com/jackwener/xhs-cli) — 小红书 CLI 工具
 - [twitter-cli](https://github.com/jackwener/twitter-cli) — Twitter/X CLI 工具
+- [discord-cli](https://github.com/jackwener/discord-cli) — Discord 本地优先同步、检索与导出 CLI
+- [tg-cli](https://github.com/jackwener/tg-cli) — Telegram 本地优先同步、检索与导出 CLI
 
 ## 功能特性
 
