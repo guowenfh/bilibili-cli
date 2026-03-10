@@ -117,7 +117,7 @@ def test_video_json(runner, mock_video_info):
          patch("bili_cli.client.get_video_info", new_callable=AsyncMock, return_value=mock_video_info):
         result = runner.invoke(cli, ["video", "BV1test123", "--json"])
         assert result.exit_code == 0
-        data = json.loads(result.output)
+        data = json.loads(result.output)["data"]
         assert data["title"] == "测试视频标题"
 
 
@@ -127,7 +127,7 @@ def test_video_yaml(runner, mock_video_info):
          patch("bili_cli.client.get_video_info", new_callable=AsyncMock, return_value=mock_video_info):
         result = runner.invoke(cli, ["video", "BV1test123", "--yaml"])
         assert result.exit_code == 0
-        data = _load_yaml(result.output)
+        data = _load_yaml(result.output)["data"]
         assert data["title"] == "测试视频标题"
 
 
@@ -254,7 +254,7 @@ def test_hot_json(runner):
          patch("bili_cli.client.get_hot_videos", new_callable=AsyncMock, return_value=mock_data):
         result = runner.invoke(cli, ["hot", "--json"])
         assert result.exit_code == 0
-        data = json.loads(result.output)
+        data = json.loads(result.output)["data"]
         assert data["list"][0]["bvid"] == "BV1hot"
 
 
@@ -264,7 +264,7 @@ def test_hot_yaml(runner):
          patch("bili_cli.client.get_hot_videos", new_callable=AsyncMock, return_value=mock_data):
         result = runner.invoke(cli, ["hot", "--yaml"])
         assert result.exit_code == 0
-        data = _load_yaml(result.output)
+        data = _load_yaml(result.output)["data"]
         assert data["list"][0]["bvid"] == "BV1hot"
 
 
@@ -290,7 +290,7 @@ def test_rank_json(runner):
     with patch("bili_cli.client.get_rank_videos", new_callable=AsyncMock, return_value=mock_data):
         result = runner.invoke(cli, ["rank", "--json"])
         assert result.exit_code == 0
-        data = json.loads(result.output)
+        data = json.loads(result.output)["data"]
         assert data["list"][0]["bvid"] == "BV1rank"
 
 
@@ -420,7 +420,7 @@ def test_user_videos_json(runner):
          patch("bili_cli.client.get_user_videos", new_callable=AsyncMock, return_value=videos):
         result = runner.invoke(cli, ["user-videos", "946974", "--json"])
         assert result.exit_code == 0
-        data = json.loads(result.output)
+        data = json.loads(result.output)["data"]
         assert data[0]["bvid"] == "BV1new"
 
 

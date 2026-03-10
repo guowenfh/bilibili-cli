@@ -55,11 +55,12 @@ def resolve_output_format(*, as_json: bool = False, as_yaml: bool = False) -> Ou
 
 def emit_structured(data: object, output_format: OutputFormat) -> bool:
     """Serialize data for machine-readable output and report whether emission happened."""
+    payload = _normalize_success_payload(data)
     if output_format == "json":
-        click.echo(json.dumps(data, ensure_ascii=False, indent=2))
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return True
     if output_format == "yaml":
-        click.echo(yaml.safe_dump(data, allow_unicode=True, sort_keys=False))
+        click.echo(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False))
         return True
     return False
 
@@ -86,6 +87,13 @@ def error_payload(code: str, message: str, *, details: object | None = None) -> 
         "schema_version": _SCHEMA_VERSION,
         "error": error,
     }
+
+
+def _normalize_success_payload(data: object) -> object:
+    """Wrap plain structured data in the shared agent success schema."""
+    if isinstance(data, dict) and data.get("schema_version") == _SCHEMA_VERSION and "ok" in data:
+        return data
+    return success_payload(data)
 
 
 def exit_error(message: str) -> NoReturn:
