@@ -1,5 +1,10 @@
 # bilibili-cli
 
+[![CI](https://github.com/jackwener/bilibili-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/jackwener/bilibili-cli/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/bilibili_cli.svg)](https://pypi.org/project/bilibili-cli/)
+[![Python versions](https://img.shields.io/pypi/pyversions/bilibili_cli.svg)](https://pypi.org/project/bilibili-cli/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+
 A CLI for Bilibili — browse videos, users, favorites from the terminal 📺
 
 [English](#features) | [中文](#功能特性)
